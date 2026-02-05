@@ -205,3 +205,52 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Environment variables
+.env
+
+# Data files (DVC tracked)
+data/raw/**/*.csv
+data/raw/**/*.json
+data/processed/**/*
+data/features/**/*
+
+# Model files (DVC tracked)
+models/**/*.pkl
+models/**/*.h5
+models/**/*.pt
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Airflow
+airflow/logs/
+airflow/*.db
+airflow/*.pid
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/.terraform.lock.hcl
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
