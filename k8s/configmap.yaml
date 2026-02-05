@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healthalliance-config
+data:
+  mlflow-uri: "http://healthalliance-mlflow-service:5000"
+  api-workers: "4"
+  log-level: "info"
+  environment: "production"
+  aws-region: "eu-central-1"

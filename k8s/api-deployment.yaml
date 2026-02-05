@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthalliance-api
+  labels:
+    app: healthalliance-api
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: healthalliance-api
+  template:
+    metadata:
+      labels:
+        app: healthalliance-api
+    spec:
+      containers:
+      - name: api
+        image: ACCOUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/healthalliance-mlops-app:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: healthalliance-secrets
+              key: database-url
+        - name: MLFLOW_TRACKING_URI
+          valueFrom:
+            configMapKeyRef:
+              name: healthalliance-config
+              key: mlflow-uri
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
