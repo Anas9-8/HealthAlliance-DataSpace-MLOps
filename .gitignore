@@ -247,6 +247,10 @@ infra/terraform/.terraform.lock.hcl
 .DS_Store
 Thumbs.db
 
+# Claude Code
+CLAUDE.md
+explain.md
+
 # Python
 __pycache__/
 *.pyc
