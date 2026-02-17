@@ -101,16 +101,24 @@ jobs:
       run: |
         aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
     
+    - name: Create Kubernetes secrets from SSM
+      run: |
+        # Secrets are created from AWS SSM — never from secrets-template.yaml
+        bash scripts/create_k8s_secrets.sh aws
+      env:
+        AWS_SSM_PREFIX: /healthalliance/prod
+
     - name: Deploy to Kubernetes
       run: |
         kubectl apply -f k8s/configmap.yaml
-        kubectl apply -f k8s/secrets-template.yaml
         kubectl apply -f k8s/postgres-pvc.yaml
         kubectl apply -f k8s/database-deployment.yaml
         kubectl apply -f k8s/database-service.yaml
         kubectl apply -f k8s/api-deployment.yaml
         kubectl apply -f k8s/api-service.yaml
         kubectl apply -f k8s/api-hpa.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
+        kubectl apply -f k8s/ingress.yaml 2>/dev/null || true
     
     - name: Verify deployment
       run: |

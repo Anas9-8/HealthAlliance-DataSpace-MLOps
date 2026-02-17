@@ -18,6 +18,7 @@ spec:
       containers:
       - name: api
         image: ACCOUNT_ID.dkr.ecr.eu-central-1.amazonaws.com/healthalliance-mlops-app:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
         env:
@@ -26,11 +27,21 @@ spec:
             secretKeyRef:
               name: healthalliance-secrets
               key: database-url
+        - name: API_KEYS
+          valueFrom:
+            secretKeyRef:
+              name: healthalliance-secrets
+              key: api-keys
         - name: MLFLOW_TRACKING_URI
           valueFrom:
             configMapKeyRef:
               name: healthalliance-config
               key: mlflow-uri
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: healthalliance-config
+              key: allowed-origins
         resources:
           requests:
             memory: "256Mi"
@@ -44,9 +55,11 @@ spec:
             port: 8000
           initialDelaySeconds: 30
           periodSeconds: 10
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /health
             port: 8000
           initialDelaySeconds: 10
           periodSeconds: 5
+          failureThreshold: 3

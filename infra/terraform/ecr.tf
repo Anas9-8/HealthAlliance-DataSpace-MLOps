@@ -36,8 +36,4 @@ resource "aws_ecr_lifecycle_policy" "app" {
   })
 }
 
-# Output ECR URL
-output "ecr_repository_url" {
-  description = "ECR repository URL"
-  value       = aws_ecr_repository.app.repository_url
-}
+# ECR URL output is defined in outputs.tf

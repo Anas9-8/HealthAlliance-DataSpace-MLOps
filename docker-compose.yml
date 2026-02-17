@@ -23,9 +23,9 @@ services:
     container_name: healthalliance-mlflow
     command: >
       bash -c "pip install mlflow==2.8.0 psycopg2-binary &&
-               mlflow server 
-               --host 0.0.0.0 
-               --port 5000 
+               mlflow server
+               --host 0.0.0.0
+               --port 5000
                --backend-store-uri sqlite:///mlflow/mlflow.db
                --default-artifact-root /mlflow/artifacts"
     ports:
@@ -50,6 +50,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://healthalliance:healthalliance_password_change_in_production@postgres:5432/healthalliance_db
       - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - API_KEYS=dev-key-dkfz,dev-key-ukhd,dev-key-embl
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
     depends_on:
       - postgres
       - mlflow
@@ -80,8 +82,38 @@ services:
     depends_on:
       - prometheus
 
+  # On-premise S3-compatible storage (simulates institution data center MinIO)
+  minio:
+    image: minio/minio:latest
+    container_name: healthalliance-minio
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # MinIO Console UI
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin_change_in_production
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: healthalliance-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
   mlflow_data:
   prometheus_data:
   grafana_data:
+  minio_data:

@@ -1,0 +1,13 @@
+patient_id,age,gender,institution,conditions,medications,recent_encounters,readmitted
+DKFZ-001,74,male,dkfz,"diabetes,hypertension,CHF","metformin,lisinopril,furosemide,aspirin,atorvastatin,carvedilol",6,1
+DKFZ-002,45,female,dkfz,"hypertension","lisinopril",1,0
+DKFZ-003,82,male,dkfz,"diabetes,COPD,hypertension,CKD","metformin,albuterol,lisinopril,furosemide,warfarin,prednisone,amlodipine",8,1
+UKHD-001,33,female,ukhd,"asthma","albuterol,fluticasone",2,0
+UKHD-002,68,male,ukhd,"diabetes,hypertension","metformin,losartan",3,0
+UKHD-003,79,female,ukhd,"CHF,atrial_fibrillation,hypertension","warfarin,digoxin,metoprolol,furosemide,lisinopril,spironolactone",7,1
+UKHD-004,55,male,ukhd,"type2_diabetes,obesity","metformin,semaglutide",2,0
+EMBL-001,71,female,embl,"breast_cancer,hypertension,diabetes","tamoxifen,metformin,amlodipine,aspirin",4,1
+EMBL-002,29,male,embl,"","",0,0
+EMBL-003,66,male,embl,"prostate_cancer,hypertension","enzalutamide,lisinopril,atorvastatin",3,0
+EMBL-004,88,female,embl,"dementia,CHF,hypertension,diabetes","donepezil,furosemide,metformin,lisinopril,aspirin,warfarin,atorvastatin",9,1
+EMBL-005,42,female,embl,"multiple_sclerosis","interferon_beta,methylprednisolone",2,0

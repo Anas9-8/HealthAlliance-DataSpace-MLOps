@@ -5,13 +5,45 @@
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5)
 ![AWS](https://img.shields.io/badge/AWS-Terraform-orange)
 ![CI/CD](https://img.shields.io/badge/CI/CD-GitHub_Actions-2088FF)
+![Frontend](https://img.shields.io/badge/Frontend-React+TypeScript-61dafb)
 
 ## Overview
-Enterprise-grade MLOps platform for healthcare data sharing and patient readmission prediction across three major German research institutions: DKFZ, UKHD, and EMBL.
 
-**Target Position:** Cloud Engineer - Universitätsklinikum Heidelberg (Job-ID: V000014487)
+Enterprise-grade MLOps platform for healthcare data sharing and patient readmission prediction
+across three major German research institutions: DKFZ, UKHD, and EMBL.
+Privacy-preserving, GDPR/HIPAA-compliant federated architecture.
+
+**Target Position:** Cloud Engineer — Health+Life Science Alliance Heidelberg (Job-ID: V000014487)
+
+---
+
+## Job Requirements Coverage
+
+| Requirement | Implementation | Status |
+|-------------|---------------|--------|
+| AWS Cloud Infrastructure | VPC, EKS, RDS, S3, ECR, Lambda — `infra/terraform/` | ✅ |
+| Kubernetes | EKS cluster, HPA, ServiceMonitor — `k8s/` | ✅ |
+| Terraform (IaC) | 9 modular .tf files with full resource graph | ✅ |
+| CI/CD Pipelines | GitHub Actions: test → ECR → EKS — `.github/workflows/` | ✅ |
+| Hybrid Cloud | VPN Gateway + MinIO on-premise simulation — `hybrid.tf`, `k8s/minio-deployment.yaml` | ✅ |
+| Serverless (Lambda) | FHIR S3-triggered processor — `lambda.tf` | ✅ |
+| Managed Database (RDS) | PostgreSQL 15.4, private subnets, encrypted — `rds.tf` | ✅ |
+| Container Registry | ECR with lifecycle policy + image scanning — `ecr.tf` | ✅ |
+| Monitoring & Observability | Prometheus + Grafana + custom metrics — `monitoring/`, `src/monitoring/` | ✅ |
+| API Development | FastAPI with auth, FHIR ingest, prediction — `src/api/main.py` | ✅ |
+| Data Versioning (DVC) | S3-backed DVC remote — `.dvc/` | ✅ |
+| ML Experiment Tracking | MLflow with artifact store — `src/pipelines/` | ✅ |
+| Orchestration (Airflow) | Daily ingestion + weekly retraining DAGs — `airflow/dags/` | ✅ |
+| Security (Auth/CORS) | X-API-Key header auth, restricted CORS — `src/api/main.py` | ✅ |
+| GDPR/HIPAA Compliance | Encryption, pseudonymization, audit logs — `docs/` | ✅ |
+| Frontend | React + TypeScript + Tailwind — `frontend/` | ✅ |
+| Tests | 25+ tests across API, data, models — `tests/` | ✅ |
+| Documentation | Architecture, API, Deployment, GDPR, HIPAA, FHIR — `docs/` | ✅ |
+
+---
 
 ## Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     CI/CD Pipeline                          │
@@ -22,184 +54,159 @@ Enterprise-grade MLOps platform for healthcare data sharing and patient readmiss
 │                   AWS Infrastructure                        │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
 │  │   VPC    │  │  S3 x2   │  │   ECR    │  │   EKS    │  │
-│  │ 4 Subnets│  │ Encrypted│  │ Registry │  │ Cluster  │  │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
+│  │ +NAT GW  │  │ Encrypted│  │ +Scanning│  │ +RDS+    │  │
+│  └──────────┘  └──────────┘  └──────────┘  │  Lambda  │  │
+│                                              └──────────┘  │
 └─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│              Kubernetes Cluster (EKS)                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │ API Pods     │  │ PostgreSQL   │  │ MLflow       │    │
-│  │ 3-10 replicas│  │ Persistent   │  │ Tracking     │    │
-│  │ Auto-scaling │  │ Storage      │  │ Server       │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                 Monitoring Stack                            │
-│  ┌─────────────────────┐  ┌─────────────────────┐         │
-│  │   Prometheus        │  │   Grafana           │         │
-│  │   - Metrics         │  │   - Dashboards      │         │
-│  │   - Alerts          │  │   - Visualization   │         │
-│  └─────────────────────┘  └─────────────────────┘         │
-└─────────────────────────────────────────────────────────────┘
+           ↓                                        ↕ VPN
+┌──────────────────────┐               ┌─────────────────────┐
+│  Kubernetes (EKS)    │               │  On-Premise (MinIO) │
+│  ├── API (3-10 pods) │               │  DKFZ / UKHD / EMBL │
+│  ├── MLflow          │               │  FHIR raw data      │
+│  ├── Frontend        │               └─────────────────────┘
+│  ├── Prometheus      │
+│  └── Grafana         │
+└──────────────────────┘
 ```
-
-## Tech Stack
-
-### Infrastructure & Cloud
-- **AWS:** VPC, S3, ECR, EKS, IAM
-- **IaC:** Terraform 1.0+
-- **Containerization:** Docker, Docker Compose
-- **Orchestration:** Kubernetes, HPA
-
-### MLOps & Data
-- **ML Tracking:** MLflow
-- **Data Versioning:** DVC
-- **Model Serving:** BentoML
-- **API:** FastAPI, Uvicorn
-
-### CI/CD & Monitoring
-- **CI/CD:** GitHub Actions
-- **Monitoring:** Prometheus, Grafana
-- **Testing:** pytest, coverage
-- **Code Quality:** Black, Flake8, MyPy
-
-### Database & Storage
-- **Database:** PostgreSQL 15
-- **Object Storage:** S3 (encrypted, versioned)
-- **Persistent Storage:** PVC with gp2
-
-## Job Requirements Coverage
-
-| Requirement | Implementation | Status |
-|-------------|---------------|--------|
-| AWS Infrastructure | Terraform (VPC, S3, ECR, EKS, IAM) | ✅ 100% |
-| IaC | Terraform with 9 modules | ✅ 100% |
-| Docker/Kubernetes | 5 containers, K8s deployments | ✅ 100% |
-| CI/CD | GitHub Actions pipeline | ✅ 100% |
-| Monitoring | Prometheus + Grafana | ✅ 100% |
-| GDPR/HIPAA | Encryption, access control, audit | ✅ 100% |
-| Healthcare Data | FHIR resources, Synthea | ✅ 100% |
-
-## Quick Start
-
-### Prerequisites
-- Docker & Docker Compose
-- AWS CLI configured
-- Terraform >= 1.0
-- kubectl
-- Python 3.10+
-
-### Local Development
-```bash
-# Clone repository
-git clone https://github.com/Anas9-8/HealthAlliance-DataSpace-MLOps.git
-cd HealthAlliance-DataSpace-MLOps
-
-# Start services
-docker compose up -d
-
-# Verify
-curl http://localhost:8000/health
-```
-
-### AWS Deployment
-```bash
-# Initialize Terraform
-cd infra/terraform
-terraform init
-terraform plan
-terraform apply
-
-# Deploy to Kubernetes
-kubectl apply -f k8s/
-```
-
-## Project Structure
-```
-HealthAlliance-DataSpace-MLOps/
-├── .github/workflows/       # CI/CD pipelines
-├── infra/terraform/         # AWS infrastructure
-├── k8s/                     # Kubernetes manifests
-├── monitoring/              # Prometheus + Grafana
-├── src/
-│   ├── api/                # FastAPI application
-│   ├── data/               # Data processing
-│   ├── models/             # ML models
-│   └── training/           # Training pipelines
-├── tests/                   # pytest tests
-├── Dockerfile              # Container definition
-└── docker-compose.yml      # Local orchestration
-```
-
-## Features
-
-### API Endpoints
-- `GET /health` - Health check
-- `POST /api/v1/predict` - Patient readmission prediction
-- `GET /api/v1/institutions` - List partner institutions
-- `GET /docs` - Swagger UI
-
-### Monitoring Dashboards
-- API request rate & latency
-- Resource usage (CPU, Memory)
-- Database connections
-- ML model performance
-- Alert notifications
-
-### Security & Compliance
-- Encryption at rest (S3, Database)
-- Encryption in transit (TLS)
-- RBAC with IAM roles
-- Audit logging enabled
-- GDPR/HIPAA compliant
-
-## Documentation
-
-- [Terraform README](infra/terraform/README.md)
-- [Kubernetes README](k8s/README.md)
-- [CI/CD README](.github/workflows/README.md)
-- [Monitoring README](monitoring/README.md)
-
-## Testing
-```bash
-# Run tests
-pytest tests/ -v --cov=src
-
-# Code quality
-black src/ tests/
-flake8 src/ tests/
-mypy src/
-```
-
-## Deployment Pipeline
-```
-Push to main → Tests → Build Docker → Push to ECR → Deploy to EKS → Verify
-```
-
-## Performance Metrics
-
-- **API Response Time:** < 200ms (p95)
-- **Prediction Latency:** < 2s (p95)
-- **Availability:** 99.9% uptime
-- **Auto-scaling:** 3-10 replicas based on load
-
-## Contributing
-
-This project was developed as a portfolio demonstration for Cloud Engineer position at Universitätsklinikum Heidelberg.
-
-## License
-
-MIT License - Academic/Portfolio Project
-
-## Contact
-
-**Developer:** Anas  
-**GitHub:** https://github.com/Anas9-8  
-**Project:** HealthAlliance DataSpace MLOps Platform  
-**Target Position:** Cloud Engineer (Job-ID: V000014487)
 
 ---
 
-**Built with  Healthcare Data Science**
+## Quick Start (Local)
+
+### Prerequisites
+- Docker + Docker Compose
+- Python 3.10
+
+### 1. Start all services
+
+```bash
+cp .env.example .env
+bash scripts/deploy_local.sh
+```
+
+### 2. Open the frontend
+
+```
+http://localhost:5173
+```
+
+Fill in patient data → click **Calculate Readmission Risk** → see the risk gauge.
+
+### 3. API calls
+
+```bash
+# Health check (no auth)
+curl http://localhost:8000/health
+
+# Predict (requires API key)
+curl -X POST http://localhost:8000/api/v1/predict \
+  -H "X-API-Key: dev-key-dkfz" \
+  -H "Content-Type: application/json" \
+  -d '{"patient_id":"P001","age":72,"gender":"male","conditions":["diabetes"],"medications":["metformin"],"recent_encounters":4}'
+```
+
+---
+
+## Frontend Interface
+
+React + TypeScript application at `http://localhost:5173`:
+
+- **Predict page** — patient form with risk gauge (green/yellow/red), animated result
+- **Institutions page** — DKFZ, UKHD, EMBL cards with patient counts
+- **Health status badge** — live API connectivity indicator in the header
+
+---
+
+## API Authentication
+
+All `/api/v1/*` endpoints (except `/health` and `/`) require:
+
+```
+X-API-Key: <your-key>
+```
+
+Keys are set in the `API_KEYS` environment variable (comma-separated).
+Default dev keys: `dev-key-dkfz`, `dev-key-ukhd`, `dev-key-embl`.
+
+---
+
+## Hybrid Cloud
+
+On-premise institution storage (MinIO) is simulated locally and connected to AWS
+via an IPSec VPN Gateway (Terraform `hybrid.tf`).
+
+```bash
+# MinIO Console (local)
+http://localhost:9001   (minioadmin / minioadmin_change_in_production)
+```
+
+See [docs/hybrid_cloud.md](docs/hybrid_cloud.md) for the full integration guide.
+
+---
+
+## Local Service Ports
+
+| Service | Port | Notes |
+|---------|------|-------|
+| Frontend | 5173 | React app |
+| FastAPI | 8000 | Metrics sidecar on 8001 |
+| MLflow | 5000 | SQLite backend locally |
+| PostgreSQL | 5432 | |
+| Prometheus | 9090 | |
+| Grafana | 3000 | admin/admin |
+| MinIO S3 API | 9000 | |
+| MinIO Console | 9001 | |
+
+---
+
+## Running Tests
+
+```bash
+pip install -r requirements.txt
+pytest tests/ -v --cov=src --cov-report=term-missing
+```
+
+25+ tests covering API (auth, edge cases, FHIR ingest), data processing, and ML model.
+
+---
+
+## AWS Deployment
+
+```bash
+bash scripts/deploy_aws.sh
+```
+
+See [docs/deployment_guide.md](docs/deployment_guide.md) for the full step-by-step guide.
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/architecture.md](docs/architecture.md) | Full system architecture with ASCII diagrams |
+| [docs/api_documentation.md](docs/api_documentation.md) | All endpoints with request/response examples |
+| [docs/deployment_guide.md](docs/deployment_guide.md) | Local → AWS step-by-step |
+| [docs/gdpr_compliance.md](docs/gdpr_compliance.md) | GDPR data minimization, retention, rights |
+| [docs/hipaa_compliance.md](docs/hipaa_compliance.md) | PHI handling, audit trails, access controls |
+| [docs/fhir_integration.md](docs/fhir_integration.md) | FHIR R4 validation and ingestion flow |
+| [docs/hybrid_cloud.md](docs/hybrid_cloud.md) | On-premise MinIO + VPN Gateway integration |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Common issues and fixes |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| API | FastAPI (Python 3.10) |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
+| ML | scikit-learn RandomForest, MLflow |
+| Orchestration | Apache Airflow |
+| Data Versioning | DVC + S3 |
+| Infrastructure | Terraform (AWS: VPC, EKS, RDS, Lambda, ECR, S3) |
+| Container Platform | Docker, Kubernetes (EKS) |
+| On-Premise Storage | MinIO (S3-compatible) |
+| Monitoring | Prometheus + Grafana |
+| CI/CD | GitHub Actions |
+| Compliance | GDPR, HIPAA, FHIR R4 |

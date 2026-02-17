@@ -25,22 +25,17 @@ output "vpc_id" {
 
 output "public_subnet_ids" {
   description = "Public subnet IDs"
-  value       = [aws_subnet.public_1.id, aws_subnet.public_2.id]
+  value       = [aws_subnet.public[0].id, aws_subnet.public[1].id]
 }
 
 output "private_subnet_ids" {
   description = "Private subnet IDs"
-  value       = [aws_subnet.private_1.id, aws_subnet.private_2.id]
-}
-
-output "ecr_repository_url" {
-  description = "ECR repository URL for pushing Docker images"
-  value       = aws_ecr_repository.app.repository_url
+  value       = [aws_subnet.private[0].id, aws_subnet.private[1].id]
 }
 
 output "healthcare_data_bucket" {
   description = "S3 bucket name for healthcare data storage"
-  value       = aws_s3_bucket.healthcare_data.bucket
+  value       = aws_s3_bucket.data.bucket
 }
 
 output "mlflow_artifacts_bucket" {
@@ -50,10 +45,20 @@ output "mlflow_artifacts_bucket" {
 
 output "eks_cluster_role_arn" {
   description = "IAM role ARN for the EKS cluster"
-  value       = aws_iam_role.eks_cluster_role.arn
+  value       = aws_iam_role.eks_cluster.arn
 }
 
 output "eks_node_role_arn" {
   description = "IAM role ARN for EKS node groups"
-  value       = aws_iam_role.eks_node_role.arn
+  value       = aws_iam_role.eks_node_group.arn
+}
+
+output "ecr_repository_url" {
+  description = "ECR repository URL for pushing Docker images"
+  value       = aws_ecr_repository.app.repository_url
+}
+
+output "nat_gateway_ip" {
+  description = "Elastic IP of the NAT Gateway"
+  value       = aws_eip.nat.public_ip
 }

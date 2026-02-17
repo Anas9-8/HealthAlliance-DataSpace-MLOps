@@ -234,6 +234,11 @@ infra/terraform/.terraform/
 infra/terraform/*.tfstate
 infra/terraform/*.tfstate.*
 infra/terraform/.terraform.lock.hcl
+infra/terraform/tfplan
+infra/terraform/fhir_processor.zip
+
+# Demo artifacts (contain live URLs and endpoints)
+.demo_urls
 
 # Jupyter
 .ipynb_checkpoints/
