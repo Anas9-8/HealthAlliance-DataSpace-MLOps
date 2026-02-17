@@ -1,4 +1,4 @@
-nano monitoring/README.mdnano monitoring/README.mdvariable "aws_region" {
+variable "aws_region" {
   description = "AWS region for resources"
   type        = string
   default     = "eu-central-1"
