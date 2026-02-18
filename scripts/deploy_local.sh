@@ -37,7 +37,7 @@ echo "════════════════════════�
 echo "  FastAPI       → http://localhost:8000"
 echo "  API Docs      → http://localhost:8000/docs"
 echo "  Frontend      → http://localhost:5173"
-echo "  MLflow        → http://localhost:5000"
+echo "  MLflow        → http://localhost:5050"
 echo "  Prometheus    → http://localhost:9090"
 echo "  Grafana       → http://localhost:3000  (admin/admin)"
 echo "  MinIO Console → http://localhost:9001  (minioadmin/minioadmin_change_in_production)"

@@ -1,13 +1,23 @@
 import logging
 import os
+import threading
 import time
+from contextlib import asynccontextmanager
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 import uvicorn
+
+from src.monitoring import (
+    ACTIVE_CONNECTIONS,
+    REQUEST_COUNT,
+    REQUEST_DURATION,
+    record_prediction,
+    start_metrics_server,
+)
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -30,12 +40,26 @@ ALLOWED_ORIGINS: list = [o.strip() for o in _raw_origins.split(",") if o.strip()
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Start Prometheus metrics server on port 8001 at API startup."""
+    metrics_port = int(os.getenv("METRICS_PORT", "8001"))
+    threading.Thread(
+        target=lambda: start_metrics_server(metrics_port),
+        daemon=True,
+        name="prometheus-metrics",
+    ).start()
+    logger.info("Prometheus metrics server started on port %d", metrics_port)
+    yield
+
+
 app = FastAPI(
     title="HealthAlliance DataSpace API",
     description="MLOps Platform for Healthcare Data Sharing - DKFZ, UKHD, EMBL",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -45,6 +69,29 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+
+# ---------------------------------------------------------------------------
+# HTTP middleware — records request count, duration, and active connections
+# ---------------------------------------------------------------------------
+@app.middleware("http")
+async def prometheus_http_middleware(request: Request, call_next):
+    ACTIVE_CONNECTIONS.inc()
+    start = time.time()
+    response = await call_next(request)
+    duration = time.time() - start
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status=str(response.status_code),
+    ).inc()
+    REQUEST_DURATION.labels(
+        method=request.method,
+        endpoint=request.url.path,
+    ).observe(duration)
+    ACTIVE_CONNECTIONS.dec()
+    return response
+
 
 # ---------------------------------------------------------------------------
 # API Key authentication
@@ -178,14 +225,16 @@ async def predict_readmission_risk(
             "Review medication plan",
         ]
 
+    duration = time.time() - start
     logger.info(
         "Prediction complete",
         extra={
             "patient_id": request.patient_id,
             "risk_level": risk_level,
-            "duration_ms": round((time.time() - start) * 1000, 1),
+            "duration_ms": round(duration * 1000, 1),
         },
     )
+    record_prediction(risk_level=risk_level, duration=duration, confidence=0.85)
 
     return {
         "patient_id": request.patient_id,

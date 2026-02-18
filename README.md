@@ -9,36 +9,9 @@
 
 ## Overview
 
-Enterprise-grade MLOps platform for healthcare data sharing and patient readmission prediction
-across three major German research institutions: DKFZ, UKHD, and EMBL.
-Privacy-preserving, GDPR/HIPAA-compliant federated architecture.
-
-**Target Position:** Cloud Engineer — Health+Life Science Alliance Heidelberg (Job-ID: V000014487)
-
----
-
-## Job Requirements Coverage
-
-| Requirement | Implementation | Status |
-|-------------|---------------|--------|
-| AWS Cloud Infrastructure | VPC, EKS, RDS, S3, ECR, Lambda — `infra/terraform/` | ✅ |
-| Kubernetes | EKS cluster, HPA, ServiceMonitor — `k8s/` | ✅ |
-| Terraform (IaC) | 9 modular .tf files with full resource graph | ✅ |
-| CI/CD Pipelines | GitHub Actions: test → ECR → EKS — `.github/workflows/` | ✅ |
-| Hybrid Cloud | VPN Gateway + MinIO on-premise simulation — `hybrid.tf`, `k8s/minio-deployment.yaml` | ✅ |
-| Serverless (Lambda) | FHIR S3-triggered processor — `lambda.tf` | ✅ |
-| Managed Database (RDS) | PostgreSQL 15.4, private subnets, encrypted — `rds.tf` | ✅ |
-| Container Registry | ECR with lifecycle policy + image scanning — `ecr.tf` | ✅ |
-| Monitoring & Observability | Prometheus + Grafana + custom metrics — `monitoring/`, `src/monitoring/` | ✅ |
-| API Development | FastAPI with auth, FHIR ingest, prediction — `src/api/main.py` | ✅ |
-| Data Versioning (DVC) | S3-backed DVC remote — `.dvc/` | ✅ |
-| ML Experiment Tracking | MLflow with artifact store — `src/pipelines/` | ✅ |
-| Orchestration (Airflow) | Daily ingestion + weekly retraining DAGs — `airflow/dags/` | ✅ |
-| Security (Auth/CORS) | X-API-Key header auth, restricted CORS — `src/api/main.py` | ✅ |
-| GDPR/HIPAA Compliance | Encryption, pseudonymization, audit logs — `docs/` | ✅ |
-| Frontend | React + TypeScript + Tailwind — `frontend/` | ✅ |
-| Tests | 25+ tests across API, data, models — `tests/` | ✅ |
-| Documentation | Architecture, API, Deployment, GDPR, HIPAA, FHIR — `docs/` | ✅ |
+Enterprise-grade MLOps platform for federated healthcare data analytics across three German
+research institutions: DKFZ, UKHD, and EMBL. The platform predicts patient readmission risk
+using a privacy-preserving, GDPR/HIPAA-compliant architecture built on AWS.
 
 ---
 
@@ -150,7 +123,7 @@ See [docs/hybrid_cloud.md](docs/hybrid_cloud.md) for the full integration guide.
 |---------|------|-------|
 | Frontend | 5173 | React app |
 | FastAPI | 8000 | Metrics sidecar on 8001 |
-| MLflow | 5000 | SQLite backend locally |
+| MLflow | 5050 | SQLite backend locally (mapped from container port 5000) |
 | PostgreSQL | 5432 | |
 | Prometheus | 9090 | |
 | Grafana | 3000 | admin/admin |
@@ -166,7 +139,7 @@ pip install -r requirements.txt
 pytest tests/ -v --cov=src --cov-report=term-missing
 ```
 
-25+ tests covering API (auth, edge cases, FHIR ingest), data processing, and ML model.
+37 tests covering API (auth, edge cases, FHIR ingest), data processing, and ML model.
 
 ---
 

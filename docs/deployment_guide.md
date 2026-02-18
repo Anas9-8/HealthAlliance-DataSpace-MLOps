@@ -18,7 +18,7 @@
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/your-org/HealthAlliance-DataSpace-MLOps.git
+git clone https://github.com/Anas9-8/HealthAlliance-DataSpace-MLOps.git
 cd HealthAlliance-DataSpace-MLOps
 cp .env.example .env
 # Edit .env — set API_KEYS and other secrets
@@ -39,7 +39,7 @@ Services started:
 | FastAPI | http://localhost:8000 |
 | API Docs | http://localhost:8000/docs |
 | Frontend | http://localhost:5173 |
-| MLflow | http://localhost:5000 |
+| MLflow | http://localhost:5050 |
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3000 |
 | MinIO Console | http://localhost:9001 |
