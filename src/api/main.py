@@ -139,8 +139,8 @@ class PatientRiskResponse(BaseModel):
 class FHIRRecord(BaseModel):
     resourceType: str
     id: str
-    gender: str
     birthDate: str
+    gender: Optional[str] = None
     institution_id: Optional[str] = None
 
 

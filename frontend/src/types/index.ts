@@ -1,7 +1,7 @@
 export interface PatientRiskRequest {
   patient_id: string
   age: number
-  gender: 'male' | 'female' | 'other'
+  gender: 'male' | 'female'
   conditions: string[]
   medications: string[]
   recent_encounters: number
