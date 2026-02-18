@@ -7,9 +7,10 @@ import type {
 } from '../types'
 
 const API_KEY = import.meta.env.VITE_API_KEY ?? 'dev-key-dkfz'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 const http = axios.create({
-  baseURL: '/api/v1',
+  baseURL: `${API_BASE_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
     'X-API-Key': API_KEY,
@@ -30,6 +31,6 @@ export async function getInstitutions(): Promise<Institution[]> {
 }
 
 export async function healthCheck(): Promise<HealthStatus> {
-  const { data } = await axios.get<HealthStatus>('/health')
+  const { data } = await axios.get<HealthStatus>(`${API_BASE_URL}/health`)
   return data
 }
