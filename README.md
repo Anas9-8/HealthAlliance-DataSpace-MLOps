@@ -17,6 +17,38 @@
 
 ---
 
+## Dashboard Screenshots
+
+### Login
+![Login](docs/screenshots/01-login.png)
+Secure entry point with JWT authentication. Two built-in roles: **admin** (full access) and **analyst** (read + predict). Quick-fill buttons let you log in with demo credentials in one click.
+
+---
+
+### Dashboard — Service Health Overview
+![Dashboard](docs/screenshots/02-dashboard.png)
+The main view shows real-time health status for all 9 services (FastAPI, MLflow, PostgreSQL, Prometheus, Grafana, MinIO, Airflow, Frontend, Metrics sidecar). Each card polls the service and shows `healthy` or `unreachable`. The bottom section displays the current model info (type, ROC-AUC, features) and the full data pipeline flow from FHIR ingestion to Grafana dashboards.
+
+---
+
+### Risk Prediction
+![Predict](docs/screenshots/03-predict.png)
+Submit a patient record and get a real-time readmission risk score from the trained RandomForest model. Quick-fill presets (High / Medium / Low Risk) populate the form instantly for demos. Results include the risk level, confidence score, and clinical recommendations. A history table shows the last predictions in the session.
+
+---
+
+### Monitoring & Observability
+![Monitoring](docs/screenshots/04-monitoring.png)
+Direct links to every monitoring tool running in Docker — Grafana, Prometheus, MLflow, MinIO Console, and Airflow — each with its port and an "Open" button. Clickable Prometheus query shortcuts let you explore metrics without typing. The reference table at the bottom lists all 6 custom metrics exported by the API (`predictions_total`, `http_request_duration_seconds`, etc.).
+
+---
+
+### Admin Panel
+![Admin](docs/screenshots/05-admin.png)
+Admin-only view for user management and model retraining. Create or delete users without touching the database. The retraining panel triggers a background training job (1 000 synthetic patients by default) and shows live status — completion time, final ROC-AUC, and sample count — once it finishes.
+
+---
+
 ## What This Project Solves
 
 Healthcare data is siloed across institutions and too sensitive to centralise. This platform lets three German research centres collaborate on a shared ML model for patient readmission risk — without raw patient data ever leaving each institution's environment.
