@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healthalliance-config
+data:
+  mlflow-uri: "http://healthalliance-mlflow-service:5000"
+  api-workers: "4"
+  log-level: "info"
+  environment: "production"
+  aws-region: "eu-central-1"
+  # Update this after deploying: https://app.YOUR_DOMAIN,https://api.YOUR_DOMAIN
+  allowed-origins: "https://app.REPLACE_WITH_DOMAIN,https://api.REPLACE_WITH_DOMAIN"

@@ -1,0 +1,149 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: healthalliance-postgres
+    environment:
+      POSTGRES_USER: healthalliance
+      POSTGRES_PASSWORD: healthalliance_password_change_in_production
+      POSTGRES_DB: healthalliance_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthalliance"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.10.0
+    container_name: healthalliance-mlflow
+    ports:
+      - "5050:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow/mlflow.db
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+    command: mlflow server --host 0.0.0.0 --port 5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: healthalliance-api
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./models:/app/models
+    environment:
+      - DATABASE_URL=postgresql://healthalliance:healthalliance_password_change_in_production@postgres:5432/healthalliance_db
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - API_KEYS=dev-key-dkfz,dev-key-ukhd,dev-key-embl
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3001
+    depends_on:
+      - postgres
+      - mlflow
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: healthalliance-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./k8s/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  grafana:
+    image: grafana/grafana:10.1.5
+    container_name: healthalliance-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin_change_in_production
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+
+  # On-premise S3-compatible storage (simulates institution data center)
+  minio:
+    image: minio/minio:latest
+    container_name: healthalliance-minio
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # MinIO Console UI
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin_change_in_production
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Apache Airflow — schedules data ingestion and model retraining pipelines
+  airflow:
+    image: apache/airflow:2.8.0
+    container_name: healthalliance-airflow
+    ports:
+      - "8085:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=healthalliance-airflow-secret-key
+      - AIRFLOW__CORE__FERNET_KEY=ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=
+      - _AIRFLOW_WWW_USER_CREATE=true
+      - _AIRFLOW_WWW_USER_USERNAME=admin
+      - _AIRFLOW_WWW_USER_PASSWORD=admin123
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - ONPREM_S3_ENDPOINT=http://minio:9000
+      - PYTHONPATH=/opt/airflow/project
+    volumes:
+      - airflow_data:/opt/airflow
+      - ./airflow/dags:/opt/airflow/dags
+      - .:/opt/airflow/project
+    command: standalone
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    depends_on:
+      - mlflow
+      - minio
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: healthalliance-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  mlflow_data:
+  prometheus_data:
+  grafana_data:
+  minio_data:
+  airflow_data:

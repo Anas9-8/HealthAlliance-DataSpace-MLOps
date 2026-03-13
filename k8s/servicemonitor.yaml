@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: healthalliance-api-monitor
+  labels:
+    app: healthalliance-api
+spec:
+  selector:
+    matchLabels:
+      app: healthalliance-api
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: healthalliance-postgres-monitor
+  labels:
+    app: healthalliance-postgres
+spec:
+  selector:
+    matchLabels:
+      app: healthalliance-postgres
+  endpoints:
+  - port: postgres
+    interval: 30s
