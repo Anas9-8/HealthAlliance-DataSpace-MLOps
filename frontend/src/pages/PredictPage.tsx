@@ -6,7 +6,7 @@ import type { PatientRiskRequest, PatientRiskResponse } from '../types'
 
 const DEMO_PATIENTS = [
   { label: 'High-risk elderly', payload: { patient_id: 'DEMO-001', age: 80, gender: 'male' as const, institution_id: 'dkfz', conditions: ['diabetes', 'CHF', 'hypertension'], medications: ['metformin', 'furosemide', 'lisinopril', 'aspirin', 'warfarin', 'digoxin'], recent_encounters: 5 } },
-  { label: 'Medium risk', payload: { patient_id: 'DEMO-002', age: 58, gender: 'female' as const, institution_id: 'ukhd', conditions: ['hypertension', 'type2_diabetes', 'obesity'], medications: ['metformin', 'losartan', 'atorvastatin'], recent_encounters: 4 } },
+  { label: 'Medium risk', payload: { patient_id: 'DEMO-002', age: 70, gender: 'female' as const, institution_id: 'ukhd', conditions: ['hypertension'], medications: ['losartan', 'aspirin'], recent_encounters: 2 } },
   { label: 'Low-risk young', payload: { patient_id: 'DEMO-003', age: 28, gender: 'male' as const, institution_id: 'embl', conditions: [], medications: [], recent_encounters: 0 } },
 ]
 

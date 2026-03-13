@@ -351,10 +351,10 @@ async def predict_readmission_risk(
     risk_score = predict_risk(_rf_model, _rf_scaler, features)
     confidence = round(abs(risk_score - 0.5) * 2 * 0.5 + 0.5, 2)
 
-    if risk_score < 0.3:
+    if risk_score < 0.02:
         risk_level = "LOW"
         recommendations = ["Regular follow-up in 3 months"]
-    elif risk_score < 0.6:
+    elif risk_score < 0.50:
         risk_level = "MEDIUM"
         recommendations = ["Schedule follow-up in 2 weeks", "Monitor medication adherence"]
     else:
