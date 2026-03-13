@@ -17,47 +17,10 @@
 
 ---
 
-## Dashboard Screenshots
-
-### Login
-![Login](docs/screenshots/01-login.png)
-Secure entry point with JWT authentication. Two built-in roles: **admin** (full access) and **analyst** (read + predict). Quick-fill buttons let you log in with demo credentials in one click.
-
----
-
-### Dashboard — Service Health + Architecture Diagrams
-![Dashboard](docs/screenshots/02-dashboard.png)
-The main view has four sections:
-- **Service health grid** — real-time status for all 9 services. Each card polls its endpoint and shows `healthy` or `unreachable`.
-- **Full Architecture diagram** — SVG diagram of every service node with labeled arrows showing which protocol connects them (REST, SQL, S3 API, PromQL, FHIR R4).
-- **Data Pipeline flow** — 9-step horizontal flow from FHIR ingestion → Airflow → DVC/MinIO → preprocessing → RandomForest training → MLflow → FastAPI serving → Prometheus → Grafana, with a description panel for each phase.
-- **Service Communication map** — table of all 11 inter-service connections, their direction, protocol, and purpose.
-
----
-
-### Risk Prediction
-![Predict](docs/screenshots/03-predict.png)
-Submit a patient record and get a real-time readmission risk score from the trained RandomForest model. Quick-fill presets (High / Medium / Low Risk) populate the form instantly for demos. Results include the risk level, confidence score, and clinical recommendations. A history table shows the last predictions in the session.
-
----
-
-### Monitoring & Observability
-![Monitoring](docs/screenshots/04-monitoring.png)
-Direct links to every monitoring tool running in Docker — Grafana, Prometheus, MLflow, MinIO Console, and Airflow — each with its port and an "Open" button. Clickable Prometheus query shortcuts let you explore metrics without typing. The reference table at the bottom lists all 6 custom metrics exported by the API (`predictions_total`, `http_request_duration_seconds`, etc.).
-
----
-
-### Admin Panel
-![Admin](docs/screenshots/05-admin.png)
-Admin-only view for user management and model retraining. Create or delete users without touching the database. The retraining panel triggers a background training job (1 000 synthetic patients by default) and shows live status — completion time, final ROC-AUC, and sample count — once it finishes.
-
----
-
 ## What This Project Solves
 
 Healthcare data is siloed across institutions and too sensitive to centralise. This platform lets three German research centres collaborate on a shared ML model for patient readmission risk — without raw patient data ever leaving each institution's environment.
 
-**Key points:**
 - FHIR R4 ingestion pipeline validated against the HL7 standard
 - Hybrid cloud: MinIO on-premise S3 + AWS cloud connected by IPSec VPN (Terraform)
 - Full MLOps loop: Airflow scheduling → DVC versioning → MLflow tracking → Kubernetes serving
@@ -66,127 +29,139 @@ Healthcare data is siloed across institutions and too sensitive to centralise. T
 
 ---
 
-## At a Glance
-
-| | |
-|---|---|
-| **Institutions** | 3 (DKFZ · UKHD · EMBL) |
-| **Tests** | 37 (API · data · ML) |
-| **Terraform modules** | 13 across `infra/terraform/` |
-| **K8s manifests** | 13 (Deployments · Services · HPA · Ingress · ServiceMonitor) |
-| **Compliance** | GDPR Art. 5/25/32 · HIPAA §164 · FHIR R4 |
-| **Cloud** | AWS eu-central-1 (VPC · EKS · RDS · Lambda · ECR · S3) |
-
----
-
-## Architecture
-
-```
- ┌─────────────────────────────────────────────────────────────────────┐
- │                        CI/CD Pipeline                               │
- │          GitHub Actions → Docker Build → ECR → kubectl apply        │
- └──────────────────────────────┬──────────────────────────────────────┘
-                                │
- ┌──────────────────────────────▼──────────────────────────────────────┐
- │                      AWS (eu-central-1)                             │
- │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐   │
- │  │ VPC/NAT  │  │  ECR     │  │  S3 ×2   │  │  EKS Cluster     │   │
- │  │          │  │ +Scanning│  │ Encrypted│  │  ┌─────────────┐ │   │
- │  └──────────┘  └──────────┘  └──────────┘  │  │ API ×3-10   │ │   │
- │                                             │  │ MLflow      │ │   │
- │  ┌──────────┐  ┌──────────┐                │  │ Frontend    │ │   │
- │  │   RDS    │  │  Lambda  │                │  │ Prometheus  │ │   │
- │  │PostgreSQL│  │ (trigger)│                │  │ Grafana     │ │   │
- │  └──────────┘  └──────────┘                │  └─────────────┘ │   │
- │                                             └──────────────────┘   │
- └───────────────────────────────────┬─────────────────────────────────┘
-                                     │ IPSec VPN
- ┌───────────────────────────────────▼─────────────────────────────────┐
- │                   On-Premise Institutions                           │
- │   ┌───────────────┐  ┌───────────────┐  ┌───────────────┐          │
- │   │     DKFZ      │  │     UKHD      │  │     EMBL      │          │
- │   │ MinIO + FHIR  │  │ MinIO + FHIR  │  │ MinIO + FHIR  │          │
- │   └───────────────┘  └───────────────┘  └───────────────┘          │
- └─────────────────────────────────────────────────────────────────────┘
-
- Data flow:  FHIR R4 JSON → DVC (S3) → Airflow DAG → Preprocessing →
-             RandomForest training → MLflow experiment → FastAPI serving →
-             Prometheus scrape → Grafana dashboards
-```
-
----
-
 ## Quick Start
 
 ```bash
-# 1. Configure environment
 cp .env.example .env
-
-# 2. Start all services
 docker compose up -d --build
-
-# 3. Open the dashboard
 open http://localhost:5173
 ```
 
-Login: `admin / admin123` or `analyst / analyst123`
-
-Everything runs locally — no AWS account needed.
+Login: `admin / admin123` or `analyst / analyst123` — no AWS account needed to run locally.
 
 ---
 
-## API Usage
+## Dashboard Screenshots
 
-```bash
-# Health check
-curl http://localhost:8000/health
+### Login
+![Login](docs/screenshots/01-login.png)
 
-# Predict patient readmission risk
-curl -X POST http://localhost:8000/api/v1/predict \
-  -H "X-API-Key: dev-key-dkfz" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patient_id": "P001",
-    "age": 72,
-    "gender": "male",
-    "conditions": ["diabetes", "hypertension"],
-    "medications": ["metformin", "lisinopril"],
-    "recent_encounters": 4
-  }'
-```
-
-**Response:**
-```json
-{
-  "patient_id": "P001",
-  "readmission_risk": 0.74,
-  "risk_level": "HIGH",
-  "confidence": 0.87,
-  "recommendations": [
-    "Immediate follow-up within 48 hours",
-    "Consider home health services",
-    "Review medication plan"
-  ]
-}
-```
-
-Swagger UI at `http://localhost:8000/docs`.
+Secure JWT authentication. Two roles: **admin** (full access including user management and model retraining) and **analyst** (read and predict only). Demo credentials are shown on the page for quick access.
 
 ---
 
-## Features
+### Dashboard — Service Health + Diagrams
+![Dashboard](docs/screenshots/02-dashboard.png)
 
-| Feature | Details |
-|---|---|
-| **Federated Privacy** | Raw patient data never leaves institution premises |
-| **FHIR R4 Ingestion** | Full HL7 FHIR R4 validation; rejects malformed records at the boundary |
-| **Hybrid Cloud** | MinIO (on-prem S3) ↔ AWS S3 via IPSec VPN — automated by Terraform |
-| **Auto-Scaling** | Kubernetes HPA scales API from 3 to 10 pods on CPU/memory pressure |
-| **MLflow Tracking** | Every training run logs params, metrics, and artifacts |
-| **Observability** | Prometheus metrics on port 8001; Grafana dashboards pre-built |
-| **CI/CD** | GitHub Actions: test → lint → Docker build → ECR push → `kubectl apply` |
-| **Auth** | JWT (Bearer) + X-API-Key dual authentication; admin/user roles |
-| **Compliance** | GDPR Art. 5/25/32 · HIPAA §164; documented in `docs/` |
+The main view contains four sections:
+- **Stat cards** — live counts for services online, model ROC-AUC, training samples, and institutions
+- **Service health grid** — real-time status for all 9 services; each card shows port and a direct link
+- **Architecture diagram** — interactive SVG showing every service as a node with labeled arrows for each connection
+- **Data pipeline flow** — 9-step horizontal flow from FHIR ingestion to Grafana, with protocol descriptions
+- **Service communication table** — all 11 inter-service connections with direction, protocol, and purpose
+
+---
+
+### Risk Prediction
+![Predict](docs/screenshots/03-predict.png)
+
+Submit a patient record and receive a readmission risk score from the trained RandomForest model. Three demo presets fill the form instantly:
+
+| Preset | Score | Level |
+|---|---|---|
+| Low-risk young | 0% | LOW |
+| Medium risk | 35% | MEDIUM |
+| High-risk elderly | 100% | HIGH |
+
+Results include risk score, confidence, and clinical recommendations. A session history table tracks all predictions.
+
+---
+
+### Monitoring & Observability
+![Monitoring](docs/screenshots/04-monitoring.png)
+
+Direct links to every monitoring tool running in Docker with port numbers and Open buttons. Clickable Prometheus query shortcuts let you explore raw metrics immediately. The reference table lists all 6 custom metrics exported by the API.
+
+---
+
+### Admin Panel
+![Admin](docs/screenshots/05-admin.png)
+
+Admin-only panel with two sections: user management (create/delete users without touching the database) and model retraining (trigger a background training job, watch status, see final ROC-AUC once done).
+
+---
+
+## Architecture Diagrams
+
+### 1. Full Architecture — Service Communication
+
+![Architecture](docs/screenshots/diag-01-architecture.png)
+
+This diagram shows all 9 services as colored nodes organised in 5 layers:
+
+| Layer | Services | Role |
+|---|---|---|
+| ① Institutions | DKFZ, UKHD, EMBL | Source of FHIR R4 patient records |
+| ② Orchestration | Airflow, Frontend | Pipeline scheduling and user interface |
+| ③ Core API & ML | FastAPI, Metrics sidecar | Prediction serving and metrics exposure |
+| ④ Storage & Tracking | MLflow, MinIO S3, PostgreSQL | Model artifacts, experiment history, relational data |
+| ⑤ Observability | Prometheus, Grafana | Metrics collection and visualisation |
+
+**How services connect:**
+
+| Connection | Protocol | What travels |
+|---|---|---|
+| Institutions → Airflow | FHIR R4 JSON / HTTPS | Raw patient records from each institution |
+| Airflow → FastAPI | HTTP REST | Trigger model retraining pipeline |
+| Airflow ↔ MinIO | S3 API (boto3) | Store and retrieve DVC-versioned data files |
+| Frontend → FastAPI | HTTP REST + JWT Bearer | Login, predict, health checks, admin actions |
+| FastAPI → MLflow | HTTP REST | Log training params, metrics, and model URIs |
+| FastAPI → MinIO | S3 API | Load trained model `.pkl` artifact at startup |
+| FastAPI ↔ PostgreSQL | SQL / SQLAlchemy | Patient metadata, session data |
+| FastAPI → Metrics :8001 | Prometheus client (in-process) | Increment counters and histograms per request |
+| Prometheus → Metrics :8001 | HTTP GET /metrics | Scrape Prometheus exposition format every 15 s |
+| Grafana → Prometheus | PromQL over HTTP | Query time-series for dashboard panels |
+| MLflow → MinIO | S3 API | Store model `.pkl` artifacts and run metadata |
+
+---
+
+### 2. Data Pipeline — End-to-End MLOps Flow
+
+![Pipeline](docs/screenshots/diag-02-pipeline.png)
+
+The full lifecycle from raw data to live monitoring, in 9 steps:
+
+**Steps 1–3 · Data Ingestion**
+
+1. **FHIR R4 Ingestion** — DKFZ, UKHD, and EMBL push patient records in HL7 FHIR R4 JSON format. Each record contains `resourceType`, `id`, `gender`, and `birthDate`. Records that fail validation are rejected at the boundary.
+2. **Airflow DAG** — Apache Airflow runs a daily scheduled DAG (`data_ingestion_dag.py`) that picks up new records from each institution and writes them to the DVC remote.
+3. **DVC + MinIO S3** — Raw and processed data files are version-controlled with DVC. MinIO acts as the S3-compatible remote, simulating an on-premise institution data store. Every dataset version is reproducible.
+
+**Steps 4–6 · Model Training**
+
+4. **Feature Engineering** — Five features are extracted per patient: `age`, `num_conditions`, `num_medications`, `recent_encounters`, `gender_encoded`. Missing values are filled with zero.
+5. **RandomForest Training** — A `RandomForestClassifier` (100 trees, `class_weight="balanced"`, `max_depth=10`) is trained on 1,000 synthetic patients. An 80/20 stratified split is used for evaluation. ROC-AUC ≈ 0.99.
+6. **MLflow Tracking** — Every training run logs hyperparameters, ROC-AUC, classification report, feature importances, and the serialized model file. The MLflow UI at `:5050` shows the full run history.
+
+**Steps 7–9 · Serving & Monitoring**
+
+7. **FastAPI Serving** — The API loads the trained model at startup. Each `POST /api/v1/predict` call runs inference and returns risk score, level, confidence, and clinical recommendations. Dual auth: `X-API-Key` (legacy) and `Bearer JWT` (frontend).
+8. **Prometheus Metrics** — A Prometheus sidecar runs on `:8001`. Every API request increments `http_requests_total`, observes `http_request_duration_seconds`, and the predict endpoint records `predictions_total`, `prediction_duration_seconds`, and `model_confidence_score`. Prometheus scrapes this endpoint every 15 seconds.
+9. **Grafana Dashboards** — Grafana connects to Prometheus via PromQL and visualises API throughput, latency distribution, prediction volume by risk level, and model confidence over time. Import the dashboard from `monitoring/grafana-dashboard.json`.
+
+---
+
+### 3. Service Communication Map
+
+![Communication](docs/screenshots/diag-03-communication.png)
+
+All 11 inter-service connections in one table. Each row shows:
+- **From / To** — which service initiates and which receives
+- **Direction** — `→` one-way or `↔` bidirectional
+- **Protocol** — the exact technology used (REST, SQL, S3 API, PromQL, FHIR R4)
+- **Purpose** — what data or command travels across that link
+
+This map is also embedded as a live interactive table inside the Dashboard page of the React UI.
 
 ---
 
@@ -221,6 +196,45 @@ Swagger UI at `http://localhost:8000/docs`.
 | **MinIO Console** | http://localhost:9001 | Object storage |
 | **Airflow** | http://localhost:8085 | Pipeline scheduler — `admin / admin123` |
 | **PostgreSQL** | localhost:5432 | Relational database |
+
+---
+
+## API Usage
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Predict patient readmission risk
+curl -X POST http://localhost:8000/api/v1/predict \
+  -H "X-API-Key: dev-key-dkfz" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_id": "P001",
+    "age": 72,
+    "gender": "male",
+    "conditions": ["diabetes", "hypertension", "CHF"],
+    "medications": ["metformin", "lisinopril", "furosemide", "warfarin", "digoxin", "aspirin"],
+    "recent_encounters": 5
+  }'
+```
+
+**Response:**
+```json
+{
+  "patient_id": "P001",
+  "readmission_risk": 1.0,
+  "risk_level": "HIGH",
+  "confidence": 0.99,
+  "recommendations": [
+    "Immediate follow-up within 48 hours",
+    "Consider home health services",
+    "Review medication plan"
+  ]
+}
+```
+
+Swagger UI at `http://localhost:8000/docs`.
 
 ---
 
@@ -265,7 +279,7 @@ HealthAlliance-DataSpace-MLOps/
 
 ## AWS Deployment
 
-See [docs/deployment_guide.md](docs/deployment_guide.md) for the step-by-step guide including OIDC setup, ALB controller, and secrets management.
+See [docs/deployment_guide.md](docs/deployment_guide.md) for the step-by-step guide.
 
 ```bash
 cd infra/terraform
