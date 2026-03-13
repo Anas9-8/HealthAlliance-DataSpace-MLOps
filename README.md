@@ -25,9 +25,13 @@ Secure entry point with JWT authentication. Two built-in roles: **admin** (full 
 
 ---
 
-### Dashboard — Service Health Overview
+### Dashboard — Service Health + Architecture Diagrams
 ![Dashboard](docs/screenshots/02-dashboard.png)
-The main view shows real-time health status for all 9 services (FastAPI, MLflow, PostgreSQL, Prometheus, Grafana, MinIO, Airflow, Frontend, Metrics sidecar). Each card polls the service and shows `healthy` or `unreachable`. The bottom section displays the current model info (type, ROC-AUC, features) and the full data pipeline flow from FHIR ingestion to Grafana dashboards.
+The main view has four sections:
+- **Service health grid** — real-time status for all 9 services. Each card polls its endpoint and shows `healthy` or `unreachable`.
+- **Full Architecture diagram** — SVG diagram of every service node with labeled arrows showing which protocol connects them (REST, SQL, S3 API, PromQL, FHIR R4).
+- **Data Pipeline flow** — 9-step horizontal flow from FHIR ingestion → Airflow → DVC/MinIO → preprocessing → RandomForest training → MLflow → FastAPI serving → Prometheus → Grafana, with a description panel for each phase.
+- **Service Communication map** — table of all 11 inter-service connections, their direction, protocol, and purpose.
 
 ---
 
