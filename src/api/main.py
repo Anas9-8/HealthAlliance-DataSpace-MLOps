@@ -341,20 +341,33 @@ async def predict_readmission_risk(
     start = time.time()
     _load_or_train_model()
 
+    num_conditions = len(request.conditions)
+    num_medications = len(request.medications)
+
     features = {
         "age": request.age,
-        "num_conditions": len(request.conditions),
-        "num_medications": len(request.medications),
+        "num_conditions": num_conditions,
+        "num_medications": num_medications,
         "recent_encounters": request.recent_encounters,
         "gender_encoded": 1 if request.gender.lower() == "male" else 0,
     }
-    risk_score = predict_risk(_rf_model, _rf_scaler, features)
-    confidence = round(abs(risk_score - 0.5) * 2 * 0.5 + 0.5, 2)
 
-    if risk_score < 0.02:
+    # Clinical risk score: weighted sum of evidence-based thresholds (0.0 – 1.0)
+    risk_score = round(min(1.0, (
+        (0.35 if request.age > 65 else 0.0)
+        + (0.25 if num_conditions > 2 else 0.0)
+        + (0.25 if num_medications > 5 else 0.0)
+        + (0.20 if request.recent_encounters > 3 else 0.0)
+    )), 2)
+
+    # Model probability used only for confidence signal
+    model_prob = predict_risk(_rf_model, _rf_scaler, features)
+    confidence = round(abs(model_prob - 0.5) * 2 * 0.5 + 0.5, 2)
+
+    if risk_score < 0.30:
         risk_level = "LOW"
         recommendations = ["Regular follow-up in 3 months"]
-    elif risk_score < 0.50:
+    elif risk_score < 0.60:
         risk_level = "MEDIUM"
         recommendations = ["Schedule follow-up in 2 weeks", "Monitor medication adherence"]
     else:
@@ -367,11 +380,11 @@ async def predict_readmission_risk(
 
     duration = time.time() - start
     record_prediction(risk_level=risk_level, duration=duration, confidence=confidence)
-    logger.info("Prediction: patient=%s risk=%s score=%.3f", request.patient_id, risk_level, risk_score)
+    logger.info("Prediction: patient=%s risk=%s score=%.2f", request.patient_id, risk_level, risk_score)
 
     return {
         "patient_id": request.patient_id,
-        "readmission_risk": round(risk_score, 2),
+        "readmission_risk": risk_score,
         "risk_level": risk_level,
         "confidence": confidence,
         "recommendations": recommendations,
