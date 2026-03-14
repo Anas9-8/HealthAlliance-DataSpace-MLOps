@@ -5,29 +5,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import pandas as pd
 import pytest
+from src.data import load_patient_data, parse_institution_data, preprocess_features, validate_fhir_record
 
-from src.data import (
-    load_patient_data,
-    parse_institution_data,
-    preprocess_features,
-    validate_fhir_record,
-)
-
-
-# ---------------------------------------------------------------------------
-# preprocess_features
-# ---------------------------------------------------------------------------
 
 def test_preprocess_features_returns_expected_columns():
-    df = pd.DataFrame(
-        {
-            "age": [45, 60],
-            "num_conditions": [2, 3],
-            "num_medications": [1, 6],
-            "recent_encounters": [2, 5],
-            "gender": ["male", "female"],
-        }
-    )
+    df = pd.DataFrame({
+        "age": [45, 60], "num_conditions": [2, 3], "num_medications": [1, 6],
+        "recent_encounters": [2, 5], "gender": ["male", "female"],
+    })
     result = preprocess_features(df)
     assert "gender_encoded" in result.columns
     assert "gender" not in result.columns
@@ -36,52 +21,25 @@ def test_preprocess_features_returns_expected_columns():
 
 def test_preprocess_features_fills_missing_with_zero():
     df = pd.DataFrame({"age": [50], "num_conditions": [None]})
-    result = preprocess_features(df)
-    assert result["num_conditions"].iloc[0] == 0
+    assert preprocess_features(df)["num_conditions"].iloc[0] == 0
 
 
 def test_preprocess_features_only_returns_known_feature_cols():
-    df = pd.DataFrame(
-        {
-            "age": [30],
-            "unknown_column": ["value"],
-            "num_conditions": [1],
-        }
-    )
-    result = preprocess_features(df)
-    assert "unknown_column" not in result.columns
+    df = pd.DataFrame({"age": [30], "unknown_column": ["value"], "num_conditions": [1]})
+    assert "unknown_column" not in preprocess_features(df).columns
 
-
-# ---------------------------------------------------------------------------
-# validate_fhir_record
-# ---------------------------------------------------------------------------
 
 def test_validate_fhir_record_valid():
-    record = {
-        "resourceType": "Patient",
-        "id": "dkfz-001",
-        "gender": "male",
-        "birthDate": "1960-01-01",
-    }
+    record = {"resourceType": "Patient", "id": "dkfz-001", "gender": "male", "birthDate": "1960-01-01"}
     assert validate_fhir_record(record) is True
 
 
 def test_validate_fhir_record_missing_gender():
-    record = {
-        "resourceType": "Patient",
-        "id": "dkfz-002",
-        "birthDate": "1960-01-01",
-    }
-    assert validate_fhir_record(record) is False
+    assert validate_fhir_record({"resourceType": "Patient", "id": "dkfz-002", "birthDate": "1960-01-01"}) is False
 
 
 def test_validate_fhir_record_missing_id():
-    record = {
-        "resourceType": "Patient",
-        "gender": "female",
-        "birthDate": "1960-01-01",
-    }
-    assert validate_fhir_record(record) is False
+    assert validate_fhir_record({"resourceType": "Patient", "gender": "female", "birthDate": "1960-01-01"}) is False
 
 
 def test_validate_fhir_record_empty_dict():
@@ -89,18 +47,9 @@ def test_validate_fhir_record_empty_dict():
 
 
 def test_validate_fhir_record_all_fields_present():
-    record = {
-        "resourceType": "Patient",
-        "id": "embl-999",
-        "gender": "other",
-        "birthDate": "1990-06-15",
-    }
+    record = {"resourceType": "Patient", "id": "embl-999", "gender": "other", "birthDate": "1990-06-15"}
     assert validate_fhir_record(record) is True
 
-
-# ---------------------------------------------------------------------------
-# parse_institution_data
-# ---------------------------------------------------------------------------
 
 def test_parse_institution_data_returns_dataframe():
     records = [
@@ -116,10 +65,9 @@ def test_parse_institution_data_returns_dataframe():
 def test_parse_institution_data_skips_invalid_records():
     records = [
         {"resourceType": "Patient", "id": "dkfz-001", "gender": "male", "birthDate": "1960-01-01"},
-        {"id": "dkfz-002"},  # invalid — missing required fields
+        {"id": "dkfz-002"},
     ]
-    df = parse_institution_data("dkfz", records)
-    assert len(df) == 1
+    assert len(parse_institution_data("dkfz", records)) == 1
 
 
 def test_parse_institution_data_empty_records():
