@@ -38,7 +38,7 @@ _scaler = None
 _roc_auc = None
 
 
-REAL_DATA_PATH = os.getenv("TRAINING_DATA_PATH", "data/patients.csv")
+REAL_DATA_PATH = os.getenv("TRAINING_DATA_PATH", "data/processed/patients.csv")
 
 
 def _load_model():

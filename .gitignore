@@ -210,9 +210,8 @@ __marimo__/
 .env
 
 # Data files (DVC tracked)
-data/raw/**/*.csv
-data/raw/**/*.json
-data/processed/**/*
+# Raw UCI dataset — too large, regenerate with: python scripts/prepare_data.py
+data/raw/
 data/features/**/*
 
 # Model files (DVC tracked)

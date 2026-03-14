@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 EXPERIMENT = os.getenv("MLFLOW_EXPERIMENT_NAME", "healthalliance-readmission")
+DATA_PATH_DEFAULT = os.getenv("TRAINING_DATA_PATH", "data/processed/patients.csv")
 MODEL_PATH = os.getenv("MODEL_OUTPUT_PATH", "models/readmission_model.pkl")
 
 
