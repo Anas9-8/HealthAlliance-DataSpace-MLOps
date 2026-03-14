@@ -91,6 +91,13 @@ Admin-only panel with two sections: user management (create/delete users without
 
 ---
 
+### Partner Institutions
+![Institutions](docs/screenshots/06-institutions.png)
+
+Shows all three federated partner institutions with their patient counts: DKFZ (500), UKHD (700), EMBL (300) — 1,500 total patients across the network.
+
+---
+
 ## Architecture Diagrams
 
 ### 1. Full Architecture — Service Communication
