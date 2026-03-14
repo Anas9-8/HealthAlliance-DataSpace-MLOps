@@ -264,3 +264,8 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/package-lock.json
