@@ -64,8 +64,11 @@ def test_predict_risk_score_in_valid_range():
 
 
 def test_predict_high_risk_patient():
-    payload = {**BASE, "age": 80, "conditions": ["diabetes", "hypertension", "CHF"],
-               "medications": ["m1", "m2", "m3", "m4", "m5", "m6"], "recent_encounters": 5}
+    # encounters>1(+0.35) + meds>15(+0.25) + age>65(+0.20) + conditions>7(+0.20) = 1.0
+    payload = {**BASE, "age": 75,
+               "conditions": ["diabetes", "CHF", "hypertension", "CKD", "COPD", "atrial_fibrillation", "depression", "anemia"],
+               "medications": ["m1","m2","m3","m4","m5","m6","m7","m8","m9","m10","m11","m12","m13","m14","m15","m16"],
+               "recent_encounters": 3}
     r = client.post("/api/v1/predict", json=payload, headers=AUTH).json()
     assert r["risk_level"] == "HIGH"
     assert r["readmission_risk"] >= 0.6

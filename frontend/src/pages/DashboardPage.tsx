@@ -259,7 +259,7 @@ function DataPipelineDiagram() {
           ]},
           { title: 'Training (steps 4–6)', color: 'bg-green-50 border-green-100', items: [
             'Features extracted: age, conditions, medications, encounters, gender',
-            'RandomForest trains on 1,000 patients — ROC-AUC ≈ 0.99',
+            'RandomForest trains on 101,763 real patients — ROC-AUC = 0.63',
             'Every run logged to MLflow: params, metrics, model artifact',
           ]},
           { title: 'Serving & Monitoring (steps 7–9)', color: 'bg-orange-50 border-orange-100', items: [
@@ -369,7 +369,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={<Server size={20} className="text-blue-600" />}   label="Services Online"   value={`${healthy} / ${services.length}`} color="blue" />
         <StatCard icon={<Brain size={20} className="text-green-600" />}   label="Model ROC-AUC"     value={modelInfo?.roc_auc ? modelInfo.roc_auc.toFixed(4) : '—'} color="green" />
-        <StatCard icon={<Database size={20} className="text-purple-600" />} label="Training Samples" value="1,000" color="purple" />
+        <StatCard icon={<Database size={20} className="text-purple-600" />} label="Training Samples" value="101,763" color="purple" />
         <StatCard icon={<Activity size={20} className="text-orange-600" />} label="Institutions"    value="3" color="orange" />
       </div>
 

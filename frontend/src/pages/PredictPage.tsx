@@ -5,9 +5,21 @@ import { predict } from '../api/client'
 import type { PatientRiskRequest, PatientRiskResponse } from '../types'
 
 const DEMO_PATIENTS = [
-  { label: 'High-risk elderly', payload: { patient_id: 'DEMO-001', age: 80, gender: 'male' as const, institution_id: 'dkfz', conditions: ['diabetes', 'CHF', 'hypertension'], medications: ['metformin', 'furosemide', 'lisinopril', 'aspirin', 'warfarin', 'digoxin'], recent_encounters: 5 } },
-  { label: 'Medium risk', payload: { patient_id: 'DEMO-002', age: 70, gender: 'female' as const, institution_id: 'ukhd', conditions: ['hypertension', 'type2_diabetes'], medications: ['metformin', 'losartan'], recent_encounters: 2 } },
-  { label: 'Low-risk young', payload: { patient_id: 'DEMO-003', age: 28, gender: 'male' as const, institution_id: 'embl', conditions: [], medications: [], recent_encounters: 0 } },
+  // HIGH: encounters>1 (+0.35) + meds>15 (+0.25) + age>65 (+0.20) + conditions>7 (+0.20) = 1.0
+  { label: 'High-risk elderly', payload: { patient_id: 'DEMO-001', age: 75, gender: 'male' as const, institution_id: 'dkfz',
+    conditions: ['diabetes', 'CHF', 'hypertension', 'CKD', 'COPD', 'atrial_fibrillation', 'depression', 'anemia'],
+    medications: ['metformin', 'lisinopril', 'furosemide', 'warfarin', 'aspirin', 'atorvastatin', 'carvedilol', 'amiodarone', 'spironolactone', 'allopurinol', 'insulin', 'amlodipine', 'metoprolol', 'omeprazole', 'levothyroxine', 'clopidogrel'],
+    recent_encounters: 3 } },
+  // MEDIUM: age>65 (+0.20) + conditions>7 (+0.20) = 0.40
+  { label: 'Medium risk', payload: { patient_id: 'DEMO-002', age: 70, gender: 'female' as const, institution_id: 'ukhd',
+    conditions: ['diabetes', 'hypertension', 'obesity', 'hypothyroidism', 'depression', 'neuropathy', 'anemia', 'CKD'],
+    medications: ['metformin', 'lisinopril', 'levothyroxine', 'sertraline', 'gabapentin', 'omeprazole', 'amlodipine', 'vitamin_d'],
+    recent_encounters: 1 } },
+  // LOW: all factors below threshold = 0.0
+  { label: 'Low-risk young', payload: { patient_id: 'DEMO-003', age: 28, gender: 'male' as const, institution_id: 'embl',
+    conditions: [],
+    medications: [],
+    recent_encounters: 0 } },
 ]
 
 export default function PredictPage() {

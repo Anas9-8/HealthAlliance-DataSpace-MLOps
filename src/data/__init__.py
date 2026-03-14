@@ -19,18 +19,20 @@ def validate_fhir_record(record):
 
 
 def generate_training_data(n_patients=1000, seed=42):
+    """Synthetic fallback — used only when data/patients.csv is not available."""
     rng = np.random.default_rng(seed)
-    age = rng.integers(18, 90, n_patients)
-    conditions = rng.integers(0, 10, n_patients)
-    medications = rng.integers(0, 12, n_patients)
+    age = rng.integers(18, 95, n_patients)
+    conditions = rng.integers(1, 16, n_patients)
+    medications = rng.integers(1, 40, n_patients)
     encounters = rng.integers(0, 10, n_patients)
     gender = rng.integers(0, 2, n_patients)
 
+    # Thresholds match the real-data calibrated scoring in the API
     risk = (
-        (age > 65) * 0.35
-        + (conditions > 2) * 0.25
-        + (medications > 5) * 0.25
-        + (encounters > 3) * 0.20
+        (encounters > 1) * 0.35
+        + (medications > 15) * 0.25
+        + (age > 65) * 0.20
+        + (conditions > 7) * 0.20
     )
     risk = np.clip(risk + rng.normal(0, 0.04, n_patients), 0, 1)
 

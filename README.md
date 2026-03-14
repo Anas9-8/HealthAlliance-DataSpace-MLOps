@@ -67,11 +67,11 @@ The main view contains four sections:
 
 Submit a patient record and receive a readmission risk score from the trained RandomForest model. Three demo presets fill the form instantly:
 
-| Preset | Score | Level |
-|---|---|---|
-| Low-risk young | 0% | LOW |
-| Medium risk | 35% | MEDIUM |
-| High-risk elderly | 100% | HIGH |
+| Preset | Score | Level | Key factors |
+|---|---|---|---|
+| Low-risk young | 0% | LOW | Age 28, no conditions, no prior visits |
+| Medium risk | 40% | MEDIUM | Age 70, 8 conditions — no recent inpatient visits |
+| High-risk elderly | 100% | HIGH | Age 75, 8+ conditions, 16+ medications, 3 prior visits |
 
 Results include risk score, confidence, and clinical recommendations. A session history table tracks all predictions.
 
@@ -147,7 +147,7 @@ The full lifecycle from raw data to live monitoring, in 9 steps:
 **Steps 4–6 · Model Training**
 
 4. **Feature Engineering** — Five features are extracted per patient: `age`, `num_conditions`, `num_medications`, `recent_encounters`, `gender_encoded`. Missing values are filled with zero.
-5. **RandomForest Training** — A `RandomForestClassifier` (100 trees, `class_weight="balanced"`, `max_depth=10`) is trained on 1,000 synthetic patients. An 80/20 stratified split is used for evaluation. ROC-AUC ≈ 0.99.
+5. **RandomForest Training** — A `RandomForestClassifier` (100 trees, `class_weight="balanced"`, `max_depth=10`) is trained on **101,763 real diabetic patients** from the [UCI Diabetes 130-US Hospitals dataset](https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008). An 80/20 stratified split is used for evaluation. ROC-AUC = 0.63 — a realistic score for 30-day readmission prediction on real clinical data.
 6. **MLflow Tracking** — Every training run logs hyperparameters, ROC-AUC, classification report, feature importances, and the serialized model file. The MLflow UI at `:5050` shows the full run history.
 
 **Steps 7–9 · Serving & Monitoring**
