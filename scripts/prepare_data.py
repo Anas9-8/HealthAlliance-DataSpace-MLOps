@@ -52,7 +52,7 @@ def process(raw):
         'num_conditions':    df['number_diagnoses'],
         'num_medications':   df['num_medications'],
         'recent_encounters': df['number_inpatient'],
-        'gender_encoded':    (df['gender'] == 'Male').astype(int),
+        'gender':            df['gender'].str.lower(),
         'readmitted':        df['readmitted'].map({'<30': 1, '>30': 0, 'NO': 0}),
     }).dropna().astype(int)
 

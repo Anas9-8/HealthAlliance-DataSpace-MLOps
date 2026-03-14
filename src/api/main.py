@@ -50,7 +50,10 @@ def _load_model():
     else:
         import pandas as pd
         if os.path.exists(REAL_DATA_PATH):
-            df = pd.read_csv(REAL_DATA_PATH)
+            from src.data import preprocess_features
+            raw = pd.read_csv(REAL_DATA_PATH)
+            df = preprocess_features(raw)
+            df["readmitted"] = raw["readmitted"].values
             logger.info("Training on %d real patients from %s", len(df), REAL_DATA_PATH)
         else:
             df = generate_training_data(1000, seed=42)
